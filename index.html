@@ -119,7 +119,11 @@
 
             el.attrs.filter(v => v.lhs !== 'class').forEach(v => {
                 res += ` ${v.lhs}`
-                if (v.rhs.length > 0) res += `="${v.rhs.join(' ')}"`
+                if (v.rhs.length > 0) {
+                	// has spaces?
+                	if (v.rhs.indexOf(' ') > -1) res += `="${v.rhs.join(' ')}"`
+                	else res += `=${v.rhs.join(' ')}`
+                }
                 
             })
             res += ` {`
