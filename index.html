@@ -44,6 +44,8 @@
 		parserData.forEach(v => {
 			if (v.type == 'text') res.push({text: [v.data]})
 			else {
+				// ignore the type = comment (for now)
+				if (v.type != 'tag') return true;
 				t = {
 					type: 'element',
 					el: v.name,
