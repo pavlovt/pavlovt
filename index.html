@@ -3,10 +3,134 @@
 <head>
 <meta charset="UTF-8">
 <title>Personal experiments</title>
+<link rel="stylesheet" href="https://unpkg.com/bootstrap-css-only@4.1.0/css/bootstrap.min.css">
 </head>
 
 <body>
-personal experiments1
+<h1>Convert html to easy html</h1>
+<div class="container">
+	<div class="row">
+		<div class="col">
+			<form id="frm">
+			  <div class="form-group">
+			    <label>Html</label><br>
+			    <textarea name="html" cols="120" rows="15"></textarea>
+			  </div>
+			  <div class="form-group">
+			    <label>Generated easy html</label>
+			    <textarea name="ehtml" cols="120" rows="15"></textarea>
+			  </div>
+			  <button type="submit" class="btn btn-primary">Convert</button>
+			</form>			
+		</div>
+	</div>
+</div>
+
+<script src="https://unpkg.com/jquery@3.3.1/dist/jquery.js"></script>
+<script src="https://unpkg.com/htmlparser@1.7.7/lib/htmlparser.js"></script>
+
+<script>
+	$(document).ready(() => {
+		$('#frm').on('submit', function(e) { //use on if jQuery 1.7+
+        e.preventDefault();  //prevent form from submitting
+        submit()
+    });
+		
+	})
+
+
+	function parser2ehtmlData(parserData) {
+		var res = [], t = {}
+		parserData.forEach(v => {
+			if (v.type == 'text') res.push({text: [v.data]})
+			else {
+				t = {
+					type: 'element',
+					el: v.name,
+					classes: [],
+					attrs: [],
+					content: [],
+				}
+
+				if (v.attribs) {
+					if (v.attribs.class) {
+						t.classes = v.attribs.class.split(' ')
+						delete v.attribs.class
+					}
+
+					// if (v.attribs.class) t.classes = [v.attribs.class];
+					t.attrs = Object.keys(v.attribs).map(z => {
+						return {lhs: z,  rhs: [v.attribs[z]]};
+					})
+
+				}
+
+				if (v.children) {
+					t.content = parser2ehtmlData(v.children).concat([])
+					// console.log('and the children of '+t.el, t.content)
+				}
+
+				res.push(t)
+			}
+		})
+
+		return res;
+	}
+
+	function submit() {
+		var handler = new Tautologistics.NodeHtmlParser.DefaultHandler(function (error, dom) {
+			if (error)
+				console.log('error', error)
+			else
+				console.log('done', dom)
+		});
+		var str = $('[name=html]').val();
+		console.log('org', str)
+		var parser = new Tautologistics.NodeHtmlParser.Parser(handler);
+		parser.parseComplete(str);
+		var z = parser2ehtmlData(handler.dom);
+		console.log(z)
+
+		// alert(JSON.stringify(handler.dom, null, 2));
+		$('[name=ehtml]').val(htmlElement(z, {}))
+	}
+
+	function htmlElement(data, options) {
+    // console.log('parse data', JSON.stringify(data))
+    
+    let res = '', cls, tmp
+    data.forEach((el) => {
+        el.attrs = el.attrs || [];
+        if (el.space) res += el.space
+        // we have space
+        else if (el.text && el.text[0].replace('/n', '').trim().length == 0) res += el.text.join('')
+        else if (el.text) res += ` '${el.text.join('')}' `
+        else {
+            if (el.type != 'element') return true;
+            // console.log('parsing element!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', el)
+            
+            tmp = el.attrs.find((v) => v.lhs === 'class')
+            // we may have div.z class="zz zzz"> i.e. we have to join the classes from both places
+            cls = tmp ? tmp.rhs.concat(el.classes).join('.') : el.classes.join('.');
+            // console.log('cls', el.el, el.classes, cls);
+            res += `${el.el}`
+            if (cls.length > 0) res += `.${cls}`
+            else res += ` `
+
+            el.attrs.filter(v => v.lhs !== 'class').forEach(v => {
+                res += ` ${v.lhs}`
+                if (v.rhs.length > 0) res += `="${v.rhs.join(' ')}"`
+                
+            })
+            res += ` {`
+            res += htmlElement(el.content, options)
+            res += `}`
+        }
+    })
+
+    return res;
+	}
+</script>
 </body>
 
 </html>
