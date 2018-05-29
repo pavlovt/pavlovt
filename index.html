@@ -107,7 +107,7 @@
         // we have space
         else if (el.text && el.text[0].replace('/n', '').trim().length == 0) res += el.text.join('')
         // make sure to escape the single quotes inside the text because the text itself is in single quotes
-        else if (el.text) res += ` '${el.text.join('').replace(/'/g, "\\\\'")}' `
+        else if (el.text) res += ` '${el.text.join('').replace(/'/g, "\\'")}' `
         else {
             if (el.type != 'element') return true;
             // console.log('parsing element!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', el)
